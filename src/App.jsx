@@ -70,6 +70,8 @@ function App() {
             const savedContract = await contractService.createContract(newContract)
             if (savedContract) {
                 setContracts((prev) => [savedContract, ...prev])
+                // Optional: Reload to ensure consistency, but keep optimistic update for speed
+                // loadContracts() 
                 return true
             }
         } catch (err) {
@@ -181,7 +183,10 @@ function App() {
 
         // Then User Filter
         if (userRole === 'COMERCIALES' && currentUser) {
-            visible = visible.filter(c => c.salesperson === currentUser)
+            visible = visible.filter(c =>
+                c.salesperson &&
+                c.salesperson.trim().toLowerCase() === currentUser.trim().toLowerCase()
+            )
         }
         return visible
     }
@@ -231,8 +236,8 @@ function App() {
                 <div style={userRole === 'COMERCIALES' ? { marginBottom: '2rem' } : { opacity: 0.8, marginBottom: '2rem' }}>
                     {userRole === 'COMERCIALES' ? (
                         <ContractForm
-                            onAdd={(newContract) => {
-                                addContract(newContract)
+                            onAdd={async (newContract) => {
+                                await addContract(newContract)
                                 alert("Contract added successfully!")
                             }}
                             lockedSalesperson={currentUser}
