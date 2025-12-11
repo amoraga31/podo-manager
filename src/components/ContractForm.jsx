@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, AlertCircle } from 'lucide-react'
 
-export function ContractForm({ onAddContract, lockedSalesperson }) {
+export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
         clientName: '',
@@ -53,7 +53,7 @@ export function ContractForm({ onAddContract, lockedSalesperson }) {
 
         // 2. Submission
         try {
-            await onAddContract({
+            await onAdd({
                 ...formData,
                 cupsCount: parseInt(formData.cupsCount) || 1
             })
@@ -239,11 +239,9 @@ export function ContractForm({ onAddContract, lockedSalesperson }) {
                             className="input-field"
                         >
                             <option value="">Seleccionar...</option>
-                            <option value="Amoraga">Amoraga</option>
-                            <option value="Dario">Dario</option>
-                            <option value="Hamza">Hamza</option>
-                            <option value="Jorge">Jorge</option>
-                            <option value="Sean">Sean</option>
+                            {salespeople.map(person => (
+                                <option key={person} value={person}>{person}</option>
+                            ))}
                         </select>
                     )}
                 </div>

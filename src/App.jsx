@@ -236,11 +236,12 @@ function App() {
                                 alert("Contract added successfully!")
                             }}
                             lockedSalesperson={currentUser}
+                            salespeople={salespeople}
                         />
                     ) : (
                         <details>
                             <summary style={{ cursor: 'pointer', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>Admin: Add Manual Contract</summary>
-                            <ContractForm onAdd={addContract} />
+                            <ContractForm onAdd={addContract} salespeople={salespeople} />
                         </details>
                     )}
                 </div>
