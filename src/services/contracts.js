@@ -33,6 +33,8 @@ export const contractService = {
             phone: contract.phone,
             address: contract.address,
             iban: contract.iban,
+            representative_name: contract.representativeName,
+            representative_dni: contract.representativeDni,
             notes: contract.notes,
             salesperson: contract.salesperson,
             date: contract.date,
@@ -142,6 +144,8 @@ export const contractService = {
             phone: dbRecord.phone,
             address: dbRecord.address,
             iban: dbRecord.iban,
+            representativeName: dbRecord.representative_name,
+            representativeDni: dbRecord.representative_dni,
             notes: dbRecord.notes,
             salesperson: dbRecord.salesperson,
             date: dbRecord.date

@@ -12,6 +12,8 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
         phone: '',
         address: '',
         iban: '',
+        representativeName: '',
+        representativeDni: '',
         notes: ''
     })
     const [error, setError] = useState(null)
@@ -53,9 +55,12 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
 
         // 2. Submission
         try {
+            const cupsCountInt = parseInt(formData.cupsCount) || 1
             await onAdd({
                 ...formData,
-                cupsCount: parseInt(formData.cupsCount) || 1
+                cupsCount: cupsCountInt,
+                // Force default status to OK
+                statusDetails: { 'OK': cupsCountInt }
             })
 
             // 3. Reset (Only if successful)
@@ -69,6 +74,8 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
                 phone: '',
                 address: '',
                 iban: '',
+                representativeName: '',
+                representativeDni: '',
                 notes: ''
             })
             // Clear any errors
@@ -195,6 +202,29 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
                         placeholder="ES00 0000 0000 0000 0000"
                         value={formData.iban}
                         onChange={(e) => setFormData({ ...formData, iban: e.target.value })}
+                        className="input-field"
+                    />
+                </div>
+
+                {/* Representative Info */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: '1 / -1' }}>
+                    <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Nombre Representante</label>
+                    <input
+                        type="text"
+                        placeholder="Nombre del representante legal..."
+                        value={formData.representativeName}
+                        onChange={(e) => setFormData({ ...formData, representativeName: e.target.value })}
+                        className="input-field"
+                    />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: '1 / -1' }}>
+                    <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>DNI Representante</label>
+                    <input
+                        type="text"
+                        placeholder="DNI del representante..."
+                        value={formData.representativeDni}
+                        onChange={(e) => setFormData({ ...formData, representativeDni: e.target.value })}
                         className="input-field"
                     />
                 </div>

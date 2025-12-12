@@ -192,14 +192,12 @@ export function ContractList({ contracts = [], onDelete, onUpdateStatus, onUpdat
                                                 padding: '1rem',
                                                 borderRadius: '0.5rem'
                                             }}>
-                                                {/* Phone is visible to everyone */}
-                                                <div>
-                                                    <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-text)' }}>Phone</span>
-                                                    {contract.phone || '-'}
-                                                </div>
-
                                                 {isManager && (
                                                     <>
+                                                        <div>
+                                                            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-text)' }}>Phone</span>
+                                                            {contract.phone || '-'}
+                                                        </div>
                                                         <div>
                                                             <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-text)' }}>DNI / NIE</span>
                                                             {contract.dni || '-'}
@@ -211,6 +209,14 @@ export function ContractList({ contracts = [], onDelete, onUpdateStatus, onUpdat
                                                         <div>
                                                             <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-text)' }}>IBAN</span>
                                                             {contract.iban || '-'}
+                                                        </div>
+                                                        <div>
+                                                            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-text)' }}>Representative</span>
+                                                            {contract.representativeName || '-'}
+                                                        </div>
+                                                        <div>
+                                                            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-text)' }}>Rep. DNI</span>
+                                                            {contract.representativeDni || '-'}
                                                         </div>
                                                     </>
                                                 )}
