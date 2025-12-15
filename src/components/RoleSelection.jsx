@@ -71,7 +71,58 @@ export function RoleSelection({ onSelectRole, salespeople }) {
     }
 
     if (showSalesList) {
-        // ... (existing code for commercials)
+        return (
+            <div style={{
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1rem',
+                flexDirection: 'column',
+                gap: '2rem'
+            }}>
+                <div style={{ textAlign: 'center' }}>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Select Your Name</h2>
+                    <p style={{ color: 'var(--color-text-muted)' }}>Who is logging in?</p>
+                </div>
+
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                    gap: '1rem',
+                    maxWidth: '500px',
+                    width: '100%'
+                }}>
+                    {salespeople.map(name => (
+                        <button
+                            key={name}
+                            onClick={() => onSelectRole('COMERCIALES', name)}
+                            className="card"
+                            style={{
+                                border: '1px solid var(--color-border)',
+                                background: 'var(--color-surface)',
+                                cursor: 'pointer',
+                                padding: '1.5rem',
+                                textAlign: 'center',
+                                transition: 'all 0.2s',
+                                fontSize: '1.1rem',
+                                fontWeight: 500
+                            }}
+                        >
+                            {name}
+                        </button>
+                    ))}
+                </div>
+
+                <button
+                    className="btn"
+                    onClick={resetState}
+                    style={{ color: 'var(--color-text-muted)', background: 'transparent', marginTop: '1rem' }}
+                >
+                    Back to Roles
+                </button>
+            </div>
+        )
     }
 
     if (loginRole === 'SELECT_MANAGER') {
