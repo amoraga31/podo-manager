@@ -1,0 +1,31 @@
+name: Weekly Password Rotation
+
+on:
+  schedule:
+    # Runs at 9:00 AM every Monday (UTC time, modify if needed)
+    # Cron syntax: minute hour day_of_month month day_of_week
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allows manual trigger for testing
+
+jobs:
+  rotate-password:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Password Rotation Script
+        run: node scripts/rotate-password.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}

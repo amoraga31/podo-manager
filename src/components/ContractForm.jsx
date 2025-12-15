@@ -6,22 +6,41 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
         date: new Date().toISOString().split('T')[0],
         clientName: '',
         type: 'Solluz',
-        cupsCount: '1', // Changed back to count
+        cupsCount: '1',
         salesperson: lockedSalesperson || '',
-        dni: '',
-        phone: '',
-        address: '',
-        iban: '',
         notes: ''
     })
+    const [contractIds, setContractIds] = useState(['']) // Array of ID strings
     const [error, setError] = useState(null)
 
-    // Sync lockedSalesperson if it changes (e.g. user logs in)
+    // Sync lockedSalesperson
     useEffect(() => {
         if (lockedSalesperson) {
             setFormData(prev => ({ ...prev, salesperson: lockedSalesperson }))
         }
     }, [lockedSalesperson])
+
+    // Sync contractIds array length with cupsCount
+    useEffect(() => {
+        const count = parseInt(formData.cupsCount) || 0
+        setContractIds(prev => {
+            const newIds = [...prev]
+            if (count > newIds.length) {
+                // Add empty slots
+                for (let i = newIds.length; i < count; i++) newIds.push('')
+            } else if (count < newIds.length) {
+                // Trim excess
+                newIds.length = count
+            }
+            return newIds
+        })
+    }, [formData.cupsCount])
+
+    const handleIdChange = (index, value) => {
+        const newIds = [...contractIds]
+        newIds[index] = value
+        setContractIds(newIds)
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -30,10 +49,6 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
         // 1. Validation Logic
         const requiredFields = [
             { field: 'clientName', label: 'Nombre Cliente' },
-            { field: 'dni', label: 'DNI / NIE' },
-            { field: 'phone', label: 'Teléfono' },
-            { field: 'address', label: 'Dirección' },
-            { field: 'iban', label: 'IBAN' },
             { field: 'salesperson', label: 'Comercial' }
         ]
 
@@ -46,6 +61,13 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
             return
         }
 
+        // Check if all IDs are filled
+        const emptyIds = contractIds.some(id => !id.trim())
+        if (emptyIds) {
+            setError(`⚠️ Faltan IDs: Has indicado ${formData.cupsCount} CUPS, así que debes rellenar los ${formData.cupsCount} IDs/CUPS.`)
+            return
+        }
+
         if (missing.length > 0) {
             setError('⚠️ Campos Incompletos: Por favor revisa que todos los datos obligatorios estén rellenos.')
             return
@@ -53,9 +75,13 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
 
         // 2. Submission
         try {
+            const cupsCountInt = parseInt(formData.cupsCount) || 1
             await onAdd({
                 ...formData,
-                cupsCount: parseInt(formData.cupsCount) || 1
+                cupsCount: cupsCountInt,
+                contractIds: contractIds, // Send the array 
+                // Force default status to OK
+                statusDetails: { 'OK': cupsCountInt }
             })
 
             // 3. Reset (Only if successful)
@@ -65,23 +91,15 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
                 type: 'Solluz',
                 cupsCount: '1',
                 salesperson: lockedSalesperson || '',
-                dni: '',
-                phone: '',
-                address: '',
-                iban: '',
                 notes: ''
             })
+            // contractIds will auto-reset via useEffect because cupsCount resets to '1'
             // Clear any errors
             setError(null)
 
         } catch (err) {
             console.error("Submission failed:", err)
-            // Display friendly message for common SQL errors
-            if (err.message && err.message.includes('column "phone" of relation "contracts" does not exist')) {
-                setError('⚠️ Error Base de Datos: Falta la columna "phone". Por favor avisa al técnico.')
-            } else {
-                setError(`⚠️ Error al guardar: ${err.message || 'Inténtalo de nuevo.'}`)
-            }
+            setError(`⚠️ Error al guardar: ${err.message || 'Inténtalo de nuevo.'}`)
         }
     }
 
@@ -148,56 +166,7 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
                     />
                 </div>
 
-                {/* DNI & Phone */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>DNI / NIE</label>
-                    <input
-                        type="text"
-                        required
-                        placeholder="12345678A"
-                        value={formData.dni}
-                        onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
-                        className="input-field"
-                    />
-                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Teléfono</label>
-                    <input
-                        type="tel"
-                        required
-                        placeholder="666777888"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="input-field"
-                    />
-                </div>
-
-                {/* Address */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: '1 / -1' }}>
-                    <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Dirección Completa</label>
-                    <input
-                        type="text"
-                        required
-                        placeholder="Calle, Número, Piso, CP, Ciudad..."
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        className="input-field"
-                    />
-                </div>
-
-                {/* IBAN */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: '1 / -1' }}>
-                    <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>IBAN</label>
-                    <input
-                        type="text"
-                        required
-                        placeholder="ES00 0000 0000 0000 0000"
-                        value={formData.iban}
-                        onChange={(e) => setFormData({ ...formData, iban: e.target.value })}
-                        className="input-field"
-                    />
-                </div>
 
                 {/* CUPS Count (Number Input) */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: '1 / -1' }}>
@@ -210,6 +179,24 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
                         onChange={(e) => setFormData({ ...formData, cupsCount: e.target.value })}
                         className="input-field"
                     />
+                </div>
+
+                {/* Dynamic ID Inputs */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem', gridColumn: '1 / -1', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0.5rem' }}>
+                    {contractIds.map((id, index) => (
+                        <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <label style={{ fontSize: '0.75rem', color: 'var(--color-primary)' }}>ID {index + 1}</label>
+                            <input
+                                type="text"
+                                required
+                                placeholder={`ID del CUPS ${index + 1}`}
+                                value={id}
+                                onChange={(e) => handleIdChange(index, e.target.value)}
+                                className="input-field"
+                                style={{ fontSize: '0.9rem' }}
+                            />
+                        </div>
+                    ))}
                 </div>
 
                 {/* Salesperson & Status */}

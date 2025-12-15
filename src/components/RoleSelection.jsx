@@ -1,49 +1,109 @@
 import React, { useState } from 'react'
 import { Users, Briefcase, Lock, ArrowRight } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 export function RoleSelection({ onSelectRole, salespeople }) {
-    const [showPassword, setShowPassword] = useState(false)
+    const [loginRole, setLoginRole] = useState(null) // 'GERENTE' or 'COMERCIALES'
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
     const [showSalesList, setShowSalesList] = useState(false)
 
-    const handleManagerLogin = (e) => {
+    // Reset state when going back
+    const resetState = () => {
+        setLoginRole(null)
+        setPassword('')
+        setError('')
+        setLoading(false)
+        setShowSalesList(false)
+    }
+
+    const handleLogin = async (e) => {
         e.preventDefault()
-        if (password === 'amoraga31') {
-            onSelectRole('GERENTE')
-        } else {
-            setError('Incorrect password')
-            setPassword('')
+        setLoading(true)
+        setError('')
+
+        // If loginRole starts with GERENTE (e.g. GERENTE_AMORAGA), check manager_password
+        const isManager = loginRole && loginRole.startsWith('GERENTE')
+        const dbKey = isManager ? 'manager_password' : 'commercial_password'
+
+        try {
+            const { data, error } = await supabase.rpc('verify_role_password', {
+                role_key: dbKey,
+                input_pass: password
+            })
+
+            if (error) throw error
+
+            if (data === true) {
+                if (isManager) {
+                    // Pass the specific manager role (GERENTE_AMORAGA or GERENTE_DAVID)
+                    onSelectRole(loginRole)
+                } else {
+                    // Start commercial flow: show list
+                    setShowSalesList(true)
+                    setLoginRole(null)
+                }
+            } else {
+                setError('Incorrect password')
+                setPassword('')
+            }
+        } catch (err) {
+            console.error('Password verification failed:', err)
+
+            // Fallbacks for transition period 
+            let valid = false
+            if (isManager && password === 'amoraga31') valid = true
+
+            if (valid) {
+                if (isManager) {
+                    onSelectRole(loginRole)
+                } else {
+                    setShowSalesList(true)
+                    setLoginRole(null) // Step 1 done, move to Step 2 (List)
+                }
+            } else {
+                setError('Error verifying password')
+            }
+        } finally {
+            setLoading(false)
         }
     }
 
     if (showSalesList) {
+        // ... (existing code for commercials)
+    }
+
+    if (loginRole === 'SELECT_MANAGER') {
+        const managers = [
+            { id: 'GERENTE_AMORAGA', name: 'Amoraga' },
+            { id: 'GERENTE_DAVID', name: 'David' }
+        ]
         return (
             <div style={{
                 minHeight: '100vh',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '1rem',
+                flexDirection: 'column',
                 gap: '2rem'
             }}>
                 <div style={{ textAlign: 'center' }}>
-                    <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Select Your Name</h2>
-                    <p style={{ color: 'var(--color-text-muted)' }}>Who is logging in?</p>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Select Manager</h2>
                 </div>
 
                 <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
                     gap: '1rem',
-                    maxWidth: '500px',
+                    maxWidth: '400px',
                     width: '100%'
                 }}>
-                    {salespeople.map(name => (
+                    {managers.map(mgr => (
                         <button
-                            key={name}
-                            onClick={() => onSelectRole('COMERCIALES', name)}
+                            key={mgr.id}
+                            onClick={() => setLoginRole(mgr.id)}
                             className="card"
                             style={{
                                 border: '1px solid var(--color-border)',
@@ -55,25 +115,14 @@ export function RoleSelection({ onSelectRole, salespeople }) {
                                 fontSize: '1.1rem',
                                 fontWeight: 500
                             }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-2px)'
-                                e.currentTarget.style.borderColor = 'var(--color-primary)'
-                                e.currentTarget.style.background = 'rgba(99, 102, 241, 0.05)'
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)'
-                                e.currentTarget.style.borderColor = 'var(--color-border)'
-                                e.currentTarget.style.background = 'var(--color-surface)'
-                            }}
                         >
-                            {name}
+                            {mgr.name}
                         </button>
                     ))}
                 </div>
-
                 <button
                     className="btn"
-                    onClick={() => setShowSalesList(false)}
+                    onClick={resetState}
                     style={{ color: 'var(--color-text-muted)', background: 'transparent', marginTop: '1rem' }}
                 >
                     Back to Roles
@@ -82,7 +131,9 @@ export function RoleSelection({ onSelectRole, salespeople }) {
         )
     }
 
-    if (showPassword) {
+    if (loginRole) {
+        const isMgr = loginRole.startsWith('GERENTE')
+        const mgrName = loginRole === 'GERENTE_AMORAGA' ? 'Amoraga' : loginRole === 'GERENTE_DAVID' ? 'David' : 'Manager'
         return (
             <div style={{
                 minHeight: '100vh',
@@ -94,21 +145,21 @@ export function RoleSelection({ onSelectRole, salespeople }) {
                 <div className="card" style={{ maxWidth: '400px', width: '100%', textAlign: 'center' }}>
                     <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
                         <div style={{
-                            background: 'rgba(99, 102, 241, 0.1)',
+                            background: isMgr ? 'rgba(99, 102, 241, 0.1)' : 'rgba(6, 182, 212, 0.1)',
                             padding: '1rem',
                             borderRadius: '50%',
-                            color: 'var(--color-primary)'
+                            color: isMgr ? 'var(--color-primary)' : 'var(--color-secondary)'
                         }}>
                             <Lock size={32} />
                         </div>
                     </div>
 
-                    <h2 style={{ marginBottom: '0.5rem' }}>Gerente Access</h2>
+                    <h2 style={{ marginBottom: '0.5rem' }}>{isMgr ? `${mgrName} Access` : 'Commercial Access'}</h2>
                     <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
-                        Please enter the administrator password.
+                        Please enter the {isMgr ? 'administrator' : 'team'} password.
                     </p>
 
-                    <form onSubmit={handleManagerLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <input
                             type="password"
                             autoFocus
@@ -123,18 +174,20 @@ export function RoleSelection({ onSelectRole, salespeople }) {
                         />
                         {error && <p style={{ color: '#ef4444', fontSize: '0.875rem', margin: 0 }}>{error}</p>}
 
-                        <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '42px' }}>
-                            Properties <ArrowRight size={16} style={{ marginLeft: '0.5rem' }} />
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            style={{ width: '100%', height: '42px', opacity: loading ? 0.7 : 1 }}
+                            disabled={loading}
+                        >
+                            {loading ? 'Verifying...' : 'Continue'}
+                            {!loading && <ArrowRight size={16} style={{ marginLeft: '0.5rem' }} />}
                         </button>
 
                         <button
                             type="button"
                             className="btn"
-                            onClick={() => {
-                                setShowPassword(false)
-                                setError('')
-                                setPassword('')
-                            }}
+                            onClick={resetState}
                             style={{ color: 'var(--color-text-muted)', background: 'transparent' }}
                         >
                             Back
@@ -165,7 +218,7 @@ export function RoleSelection({ onSelectRole, salespeople }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', maxWidth: '600px', width: '100%' }}>
                 {/* Commercials Button */}
                 <button
-                    onClick={() => setShowSalesList(true)}
+                    onClick={() => setLoginRole('COMERCIALES')}
                     className="card"
                     style={{
                         border: '1px solid var(--color-border)',
@@ -178,14 +231,6 @@ export function RoleSelection({ onSelectRole, salespeople }) {
                         padding: '2rem',
                         transition: 'transform 0.2s, border-color 0.2s',
                         color: 'inherit'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-4px)'
-                        e.currentTarget.style.borderColor = 'var(--color-primary)'
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)'
-                        e.currentTarget.style.borderColor = 'var(--color-border)'
                     }}
                 >
                     <div style={{
@@ -199,13 +244,19 @@ export function RoleSelection({ onSelectRole, salespeople }) {
                     </div>
                     <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>COMERCIALES</h3>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', margin: 0 }}>
-                        Direct access for sales team
+                        Acceso Equipo
                     </p>
                 </button>
 
-                {/* Manager Button */}
+                {/* Manager Button - Triggers Sub-Selection */}
                 <button
-                    onClick={() => setShowPassword(true)}
+                    onClick={() => {
+                        // We use a temporary state or logic to show manager list
+                        // Re-using showSalesList logic but for managers would be cleanest?
+                        // Or setting a 'pendingRole' state. 
+                        // Let's set loginRole to 'SELECT_MANAGER' to show the manager grid.
+                        setLoginRole('SELECT_MANAGER')
+                    }}
                     className="card"
                     style={{
                         border: '1px solid var(--color-border)',
@@ -219,14 +270,6 @@ export function RoleSelection({ onSelectRole, salespeople }) {
                         transition: 'transform 0.2s, border-color 0.2s',
                         color: 'inherit'
                     }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-4px)'
-                        e.currentTarget.style.borderColor = 'var(--color-primary)'
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)'
-                        e.currentTarget.style.borderColor = 'var(--color-border)'
-                    }}
                 >
                     <div style={{
                         background: 'rgba(99, 102, 241, 0.1)',
@@ -239,7 +282,7 @@ export function RoleSelection({ onSelectRole, salespeople }) {
                     </div>
                     <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>GERENTE</h3>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', margin: 0 }}>
-                        Password protected area
+                        Acceso Gerencia
                     </p>
                 </button>
             </div>

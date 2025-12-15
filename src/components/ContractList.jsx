@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { ChevronDown, ChevronUp, Trash2, Edit2, Save, X } from 'lucide-react'
+import { StatusSplitter } from './StatusSplitter'
 
 export function ContractList({ contracts = [], onDelete, onUpdateStatus, onUpdateField, userRole }) {
     const [editingId, setEditingId] = useState(null)
@@ -52,7 +53,7 @@ export function ContractList({ contracts = [], onDelete, onUpdateStatus, onUpdat
         )
     }
 
-    const isManager = userRole === 'GERENTE'
+    const isManager = userRole && userRole.startsWith('GERENTE')
 
     return (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -192,28 +193,31 @@ export function ContractList({ contracts = [], onDelete, onUpdateStatus, onUpdat
                                                 padding: '1rem',
                                                 borderRadius: '0.5rem'
                                             }}>
-                                                {/* Phone is visible to everyone */}
-                                                <div>
-                                                    <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-text)' }}>Phone</span>
-                                                    {contract.phone || '-'}
-                                                </div>
 
-                                                {isManager && (
-                                                    <>
-                                                        <div>
-                                                            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-text)' }}>DNI / NIE</span>
-                                                            {contract.dni || '-'}
-                                                        </div>
-                                                        <div>
-                                                            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-text)' }}>Address</span>
-                                                            {contract.address || '-'}
-                                                        </div>
-                                                        <div>
-                                                            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-text)' }}>IBAN</span>
-                                                            {contract.iban || '-'}
-                                                        </div>
-                                                    </>
-                                                )}
+
+                                                <div style={{ gridColumn: '1 / -1' }}>
+                                                    <div style={{ marginBottom: '0.25rem' }}>
+                                                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text)' }}>IDs / CUPS</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                                        {contract.contractIds && contract.contractIds.length > 0 ? (
+                                                            contract.contractIds.map((id, idx) => (
+                                                                <span key={idx} style={{
+                                                                    background: 'rgba(255,255,255,0.05)',
+                                                                    padding: '0.25rem 0.5rem',
+                                                                    borderRadius: '4px',
+                                                                    fontSize: '0.8rem',
+                                                                    fontFamily: 'monospace',
+                                                                    border: '1px solid rgba(255,255,255,0.1)'
+                                                                }}>
+                                                                    {id}
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            <span style={{ fontStyle: 'italic', opacity: 0.5 }}>-</span>
+                                                        )}
+                                                    </div>
+                                                </div>
 
                                                 <div style={{ gridColumn: '1 / -1' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
