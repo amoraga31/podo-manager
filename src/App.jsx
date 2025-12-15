@@ -35,6 +35,25 @@ function App() {
         localStorage.setItem('teams_config_v1', JSON.stringify(teams))
     }, [teams])
 
+    const [contracts, setContracts] = useState([])
+    const [timeFilter, setTimeFilter] = useState('all')
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [deleteId, setDeleteId] = useState(null)
+
+    const loadContracts = async () => {
+        setLoading(true)
+        try {
+            const data = await contractService.fetchContracts()
+            setContracts(data)
+        } catch (err) {
+            console.error(err)
+            setError("Failed to load contracts. Please check your connection.")
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const manageTeam = {
         add: (name) => {
             if (!name) return
