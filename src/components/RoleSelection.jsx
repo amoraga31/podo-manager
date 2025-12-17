@@ -128,7 +128,8 @@ export function RoleSelection({ onSelectRole, salespeople }) {
     if (loginRole === 'SELECT_MANAGER') {
         const managers = [
             { id: 'GERENTE_AMORAGA', name: 'Amoraga' },
-            { id: 'GERENTE_DAVID', name: 'David' }
+            { id: 'GERENTE_DAVID', name: 'David' },
+            { id: 'GERENTE_SANDRA', name: 'Sandra' }
         ]
         return (
             <div style={{
@@ -184,7 +185,11 @@ export function RoleSelection({ onSelectRole, salespeople }) {
 
     if (loginRole) {
         const isMgr = loginRole.startsWith('GERENTE')
-        const mgrName = loginRole === 'GERENTE_AMORAGA' ? 'Amoraga' : loginRole === 'GERENTE_DAVID' ? 'David' : 'Manager'
+        const mgrName =
+            loginRole === 'GERENTE_AMORAGA' ? 'Amoraga' :
+                loginRole === 'GERENTE_DAVID' ? 'David' :
+                    loginRole === 'GERENTE_SANDRA' ? 'Sandra' :
+                        'Manager'
         return (
             <div style={{
                 minHeight: '100vh',

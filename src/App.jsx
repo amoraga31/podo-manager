@@ -14,7 +14,8 @@ import { RoleSelection } from './components/RoleSelection'
 
 const DEFAULT_TEAMS = {
     AMORAGA: ['Ian', 'Lizeth', 'Pablo', 'Formacion Amoraga'],
-    DAVID: ['Pablo S', 'Pepe', 'Dario', 'Angel', 'Ivan', 'Dana', 'Marcos', 'Sean', 'Xavi', 'Pepe P', 'Formacion David']
+    DAVID: ['Pablo S', 'Pepe', 'Dario', 'Angel', 'Ivan', 'Dana', 'Marcos', 'Sean', 'Xavi', 'Pepe P', 'Formacion David'],
+    SANDRA: []
 }
 
 function App() {
@@ -24,15 +25,15 @@ function App() {
 
     // Dynamic Team Management - Persisted in LocalStorage
     const [teams, setTeams] = useState(() => {
-        const saved = localStorage.getItem('teams_config_v1')
+        const saved = localStorage.getItem('teams_config_v2') // Bump version to include Sandra if coming from v1
         return saved ? JSON.parse(saved) : DEFAULT_TEAMS
     })
 
     // Derived list of all salespeople for Commercial login
-    const salespeople = [...new Set([...teams.AMORAGA, ...teams.DAVID])]
+    const salespeople = [...new Set([...teams.AMORAGA, ...teams.DAVID, ...(teams.SANDRA || [])])]
 
     React.useEffect(() => {
-        localStorage.setItem('teams_config_v1', JSON.stringify(teams))
+        localStorage.setItem('teams_config_v2', JSON.stringify(teams))
     }, [teams])
 
     const [contracts, setContracts] = useState([])
@@ -58,12 +59,14 @@ function App() {
         add: (name) => {
             if (!name) return
             // Determine which team to add to based on User Role
-            const targetTeam = userRole === 'GERENTE_DAVID' ? 'DAVID' : 'AMORAGA' // Default to Amoraga if super admin or ambiguous? Or default to own team.
+            let targetTeam = 'AMORAGA'
+            if (userRole === 'GERENTE_DAVID') targetTeam = 'DAVID'
+            if (userRole === 'GERENTE_SANDRA') targetTeam = 'SANDRA'
 
             if (!teams[targetTeam].includes(name)) {
                 setTeams(prev => ({
                     ...prev,
-                    [targetTeam]: [...prev[targetTeam], name]
+                    [targetTeam]: [...(prev[targetTeam] || []), name]
                 }))
                 alert(`Added ${name} to Team ${targetTeam}.`)
             }
@@ -75,6 +78,7 @@ function App() {
                     // Remove from whichever team they are in
                     newTeams.AMORAGA = newTeams.AMORAGA.filter(p => p !== name)
                     newTeams.DAVID = newTeams.DAVID.filter(p => p !== name)
+                    if (newTeams.SANDRA) newTeams.SANDRA = newTeams.SANDRA.filter(p => p !== name)
                     return newTeams
                 })
             }
@@ -223,6 +227,10 @@ function App() {
             visible = visible.filter(c => teams.DAVID.includes(c.salesperson))
         }
 
+        if (userRole === 'GERENTE_SANDRA') {
+            visible = visible.filter(c => (teams.SANDRA || []).includes(c.salesperson))
+        }
+
         return visible
     }
 
@@ -286,7 +294,8 @@ function App() {
                                 salespeople={
                                     userRole === 'GERENTE_AMORAGA' ? teams.AMORAGA :
                                         userRole === 'GERENTE_DAVID' ? teams.DAVID :
-                                            salespeople // Fallback for super-admin or mixed
+                                            userRole === 'GERENTE_SANDRA' ? (teams.SANDRA || []) :
+                                                salespeople // Fallback for super-admin or mixed
                                 }
                             />
                         </details>
@@ -298,7 +307,11 @@ function App() {
                     <div style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid var(--color-border)', borderRadius: '0.5rem' }}>
                         <details>
                             <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>
-                                Manage Team ({userRole === 'GERENTE_DAVID' ? 'David\'s Team' : 'Amoraga\'s Team'})
+                                Manage Team ({
+                                    userRole === 'GERENTE_DAVID' ? 'David\'s Team' :
+                                        userRole === 'GERENTE_SANDRA' ? 'Sandra\'s Team' :
+                                            'Amoraga\'s Team'
+                                })
                             </summary>
                             <div style={{ marginTop: '1rem' }}>
                                 <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -320,7 +333,11 @@ function App() {
                                 </div>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                                     {/* Show only relevant team members for deletion */}
-                                    {(userRole === 'GERENTE_DAVID' ? teams.DAVID : teams.AMORAGA).map(p => (
+                                    {(
+                                        userRole === 'GERENTE_DAVID' ? teams.DAVID :
+                                            userRole === 'GERENTE_SANDRA' ? (teams.SANDRA || []) :
+                                                teams.AMORAGA
+                                    ).map(p => (
                                         <span key={p} style={{
                                             background: 'var(--color-surface)',
                                             border: '1px solid var(--color-border)',
