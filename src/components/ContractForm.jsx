@@ -5,6 +5,10 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
         clientName: '',
+        dni: '',
+        phone: '',
+        address: '',
+        iban: '',
         type: 'Solluz',
         cupsCount: '1',
         salesperson: lockedSalesperson || '',
@@ -49,11 +53,16 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
         // 1. Validation Logic
         const requiredFields = [
             { field: 'clientName', label: 'Nombre Cliente' },
+            { field: 'dni', label: 'DNI/NIE' },
+            { field: 'phone', label: 'Teléfono' },
+            { field: 'address', label: 'Dirección' },
             { field: 'salesperson', label: 'Comercial' }
+            // IBAN is often optional or can be validated later, but let's make it required as implied
         ]
 
         // Check required simplified fields
         const missing = requiredFields.filter(f => !formData[f.field]?.trim())
+        if (!formData.iban?.trim()) missing.push({ field: 'iban', label: 'IBAN' })
 
         // Check CUPS Count > 0
         if (parseInt(formData.cupsCount) < 1) {
@@ -64,12 +73,12 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
         // Check if all IDs are filled
         const emptyIds = contractIds.some(id => !id.trim())
         if (emptyIds) {
-            setError(`⚠️ Faltan IDs: Has indicado ${formData.cupsCount} CUPS, así que debes rellenar los ${formData.cupsCount} IDs/CUPS.`)
+            setError(`⚠️ Falta CUPS: Has indicado ${formData.cupsCount} CUPS, así que debes rellenar los ${formData.cupsCount} códigos CUPS.`)
             return
         }
 
         if (missing.length > 0) {
-            setError('⚠️ Campos Incompletos: Por favor revisa que todos los datos obligatorios estén rellenos.')
+            setError(`⚠️ Campos Incompletos: Faltan ${missing.map(m => m.label).join(', ')}`)
             return
         }
 
@@ -88,6 +97,10 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
             setFormData({
                 date: new Date().toISOString().split('T')[0],
                 clientName: '',
+                dni: '',
+                phone: '',
+                address: '',
+                iban: '',
                 type: 'Solluz',
                 cupsCount: '1',
                 salesperson: lockedSalesperson || '',
@@ -153,8 +166,9 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
                     </select>
                 </div>
 
+
                 {/* Client Name */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: '1 / -1' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: 'span 2' }}>
                     <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Nombre Cliente</label>
                     <input
                         type="text"
@@ -163,6 +177,59 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
                         value={formData.clientName}
                         onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
                         className="input-field"
+                    />
+                </div>
+
+                {/* DNI */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>DNI/NIE</label>
+                    <input
+                        type="text"
+                        required
+                        placeholder="12345678X"
+                        value={formData.dni}
+                        onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+                        className="input-field"
+                    />
+                </div>
+
+                {/* Phone */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Teléfono</label>
+                    <input
+                        type="text"
+                        required
+                        placeholder="600000000"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="input-field"
+                    />
+                </div>
+
+                {/* Address */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: '1 / -1' }}>
+                    <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Dirección Suministro + CP</label>
+                    <input
+                        type="text"
+                        required
+                        placeholder="Calle Ejemplo 1, 28000 Madrid"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        className="input-field"
+                    />
+                </div>
+
+                {/* IBAN */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: '1 / -1' }}>
+                    <label style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>IBAN</label>
+                    <input
+                        type="text"
+                        required
+                        placeholder="ES00 0000 0000 0000 0000 0000"
+                        value={formData.iban}
+                        onChange={(e) => setFormData({ ...formData, iban: e.target.value })}
+                        className="input-field"
+                        style={{ fontFamily: 'monospace' }}
                     />
                 </div>
 
@@ -181,19 +248,19 @@ export function ContractForm({ onAdd, lockedSalesperson, salespeople = [] }) {
                     />
                 </div>
 
-                {/* Dynamic ID Inputs */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem', gridColumn: '1 / -1', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0.5rem' }}>
+                {/* Dynamic CUPS Inputs */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.5rem', gridColumn: '1 / -1', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0.5rem' }}>
                     {contractIds.map((id, index) => (
                         <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <label style={{ fontSize: '0.75rem', color: 'var(--color-primary)' }}>ID {index + 1}</label>
+                            <label style={{ fontSize: '0.75rem', color: 'var(--color-primary)' }}>CUPS {index + 1}</label>
                             <input
                                 type="text"
                                 required
-                                placeholder={`ID del CUPS ${index + 1}`}
+                                placeholder={`Código CUPS ${index + 1}`}
                                 value={id}
                                 onChange={(e) => handleIdChange(index, e.target.value)}
                                 className="input-field"
-                                style={{ fontSize: '0.9rem' }}
+                                style={{ fontSize: '0.9rem', fontFamily: 'monospace' }}
                             />
                         </div>
                     ))}

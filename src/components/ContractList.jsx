@@ -64,6 +64,14 @@ export function ContractList({ contracts = [], onDelete, onUpdateStatus, onUpdat
                             <th style={{ width: '40px', padding: '1rem' }}></th>
                             <th style={{ padding: '1rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Date</th>
                             <th style={{ padding: '1rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Client</th>
+                            {isManager && (
+                                <>
+                                    <th style={{ padding: '1rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>DNI</th>
+                                    <th style={{ padding: '1rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Address</th>
+                                    <th style={{ padding: '1rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Phone</th>
+                                    <th style={{ padding: '1rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>IBAN</th>
+                                </>
+                            )}
                             <th style={{ padding: '1rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Type</th>
                             <th style={{ padding: '1rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>CUPS</th>
                             <th style={{ padding: '1rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Salesperson</th>
@@ -86,6 +94,14 @@ export function ContractList({ contracts = [], onDelete, onUpdateStatus, onUpdat
                                     </td>
                                     <td style={{ padding: '1rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>{contract.date}</td>
                                     <td style={{ padding: '1rem', fontWeight: 500 }}>{contract.clientName}</td>
+                                    {isManager && (
+                                        <>
+                                            <td style={{ padding: '1rem', color: 'var(--color-text-muted)' }}>{contract.dni || '-'}</td>
+                                            <td style={{ padding: '1rem', color: 'var(--color-text-muted)', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={contract.address}>{contract.address || '-'}</td>
+                                            <td style={{ padding: '1rem', color: 'var(--color-text-muted)' }}>{contract.phone || '-'}</td>
+                                            <td style={{ padding: '1rem', color: 'var(--color-text-muted)', fontFamily: 'monospace' }}>{contract.iban || '-'}</td>
+                                        </>
+                                    )}
                                     <td style={{ padding: '1rem' }}>
                                         <span className={`type-badge type-${contract.type.toLowerCase().replace(/\s+/g, '-')}`}>
                                             {contract.type}

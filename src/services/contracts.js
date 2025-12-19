@@ -33,6 +33,11 @@ export const contractService = {
             notes: contract.notes,
             salesperson: contract.salesperson,
             date: contract.date,
+            // Extended fields
+            dni: contract.dni,
+            phone: contract.phone,
+            address: contract.address,
+            iban: contract.iban,
             created_at: new Date().toISOString()
         }
 
@@ -140,8 +145,6 @@ export const contractService = {
             phone: dbRecord.phone,
             address: dbRecord.address,
             iban: dbRecord.iban,
-            representativeName: dbRecord.representative_name,
-            representativeDni: dbRecord.representative_dni,
             notes: dbRecord.notes,
             salesperson: dbRecord.salesperson,
             date: dbRecord.date
