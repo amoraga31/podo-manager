@@ -11,6 +11,7 @@ import { supabase } from './lib/supabase'
 
 import { ConfirmationModal } from './components/ConfirmationModal'
 import { RoleSelection } from './components/RoleSelection'
+import { teamsService } from './services/teams'
 
 const DEFAULT_TEAMS = {
     AMORAGA: ['Ian', 'Lizeth', 'Pablo', 'Formacion Amoraga'],
@@ -24,17 +25,20 @@ function App() {
     const [currentUser, setCurrentUser] = useState(null)
 
     // Dynamic Team Management - Persisted in LocalStorage
-    const [teams, setTeams] = useState(() => {
-        const saved = localStorage.getItem('teams_config_v2') // Bump version to include Sandra if coming from v1
-        return saved ? JSON.parse(saved) : DEFAULT_TEAMS
-    })
+    const [teams, setTeams] = useState(DEFAULT_TEAMS)
 
-    // Derived list of all salespeople for Commercial login
-    const salespeople = [...new Set([...teams.AMORAGA, ...teams.DAVID, ...(teams.SANDRA || [])])]
+    // Derived list for login
+    const salespeople = [...new Set([...(teams.AMORAGA || []), ...(teams.DAVID || []), ...(teams.SANDRA || [])])]
 
+    // Load Teams from DB
     React.useEffect(() => {
-        localStorage.setItem('teams_config_v2', JSON.stringify(teams))
-    }, [teams])
+        const loadTeams = async () => {
+            const dbTeams = await teamsService.fetchTeams()
+            // Merge with default structure to ensure keys exist
+            setTeams(prev => ({ ...DEFAULT_TEAMS, ...dbTeams }))
+        }
+        loadTeams()
+    }, [])
 
     const [contracts, setContracts] = useState([])
     const [timeFilter, setTimeFilter] = useState('all')
@@ -56,31 +60,39 @@ function App() {
     }
 
     const manageTeam = {
-        add: (name) => {
+        add: async (name) => {
             if (!name) return
-            // Determine which team to add to based on User Role
             let targetTeam = 'AMORAGA'
             if (userRole === 'GERENTE_DAVID') targetTeam = 'DAVID'
             if (userRole === 'GERENTE_SANDRA') targetTeam = 'SANDRA'
 
-            if (!teams[targetTeam].includes(name)) {
+            const currentTeam = teams[targetTeam] || []
+            if (!currentTeam.includes(name)) {
+                // Optimistic Update
                 setTeams(prev => ({
                     ...prev,
                     [targetTeam]: [...(prev[targetTeam] || []), name]
                 }))
-                alert(`Added ${name} to Team ${targetTeam}.`)
+
+                // DB Update
+                const success = await teamsService.addMember(name, targetTeam)
+                if (!success) alert("Warning: Could not save new member to database.")
             }
         },
-        remove: (name) => {
+        remove: async (name) => {
             if (confirm(`Remove ${name} from the team?`)) {
+                // Optimistic Update
                 setTeams(prev => {
                     const newTeams = { ...prev }
-                    // Remove from whichever team they are in
-                    newTeams.AMORAGA = newTeams.AMORAGA.filter(p => p !== name)
-                    newTeams.DAVID = newTeams.DAVID.filter(p => p !== name)
+                    newTeams.AMORAGA = (newTeams.AMORAGA || []).filter(p => p !== name)
+                    newTeams.DAVID = (newTeams.DAVID || []).filter(p => p !== name)
                     if (newTeams.SANDRA) newTeams.SANDRA = newTeams.SANDRA.filter(p => p !== name)
                     return newTeams
                 })
+
+                // DB Update
+                const success = await teamsService.removeMember(name)
+                if (!success) alert("Warning: Could not remove member from database.")
             }
         }
     }
